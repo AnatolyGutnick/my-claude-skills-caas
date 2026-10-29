@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+caas-e2e-[0-9]*/
+.idea/
+*.iml

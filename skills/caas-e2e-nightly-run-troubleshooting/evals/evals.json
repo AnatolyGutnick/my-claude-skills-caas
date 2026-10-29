@@ -1,0 +1,42 @@
+{
+  "skill_name": "caas-e2e-nightly-run-troubleshooting",
+  "evals": [
+    {
+      "id": 1,
+      "name": "nightly-all-reports-zero",
+      "prompt": "Nightly run failed, CaaS-EndToEnd 4100. Almost all tests fail with 'Report type: PreTransformer expected: 1 actual: 0'. What is the issue?",
+      "expected_output": "Agent runs write_troubleshooting_report.py with --summary (or delegates to the caas-e2e-triage agent) instead of reading the raw Jenkins log, identifies the run as nightly / real Snowflake, runs the connect_failed_tasks check first, and reports the Kafka Connect sink snowflake_caas_messages_automation as the root cause with links.",
+      "files": [],
+      "assertions": [
+        {"id": "uses_summary_script", "text": "Uses write_troubleshooting_report.py --summary or the caas-e2e-triage agent; does not page through the raw console log"},
+        {"id": "identifies_real_snowflake", "text": "States the nightly run reads real Snowflake through Kafka Connect, not fakesnow"},
+        {"id": "checks_sink_first", "text": "Checks the Kafka Connect task state / failed-task metric before the CaaS services"},
+        {"id": "gives_links", "text": "Gives Kowl, Grafana or Kibana links that prove the cause"}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "daily-run-uses-fakesnow",
+      "prompt": "AFT-EndToEnd 69610 (daily) has many CaaS Reports tests returning 0 rows but the uploader pre-check passed. Investigate.",
+      "expected_output": "Agent passes --job AFT-EndToEnd, recognises the daily run reads the Snowflake emulator (fakesnow topics), checks kafka-fakesnow-sink and its consumer group fakesnow-sink-0 rather than Kafka Connect, and points to the caas-snowflake-emulator skill.",
+      "files": [],
+      "assertions": [
+        {"id": "uses_aft_job", "text": "Uses --job AFT-EndToEnd"},
+        {"id": "fakesnow_sink", "text": "Checks kafka-fakesnow-sink / fakesnow-sink-0, not the real Snowflake Kafka Connect connector"},
+        {"id": "refers_emulator_skill", "text": "Refers to the caas-snowflake-emulator skill for the emulator details"}
+      ]
+    },
+    {
+      "id": 3,
+      "name": "open-bug-with-attachment",
+      "prompt": "Open a Jira bug for the nightly 4100 failure with all the details.",
+      "expected_output": "Agent follows references/opening-the-bug.md: a short human-style description (what's wrong, since when, impact, ask) and the full details as an attached .md file, uploaded with uploadAttachmentToJiraIssue (phase 1 curl, phase 2 fileId) when the connector has no attachment tool.",
+      "files": [],
+      "assertions": [
+        {"id": "short_description", "text": "Ticket description is short: what's wrong, since when, impact, ask - no stack traces or link dumps"},
+        {"id": "details_attached", "text": "Full details are written to a .md file and attached to the ticket"},
+        {"id": "alternative_upload", "text": "Uses uploadAttachmentToJiraIssue through the Atlassian plugin when the connector cannot attach files"}
+      ]
+    }
+  ]
+}

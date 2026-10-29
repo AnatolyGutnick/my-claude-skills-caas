@@ -1,0 +1,39 @@
+{
+  "skill_name": "caas-snowflake-emulator",
+  "evals": [
+    {
+      "id": 1,
+      "name": "daily-run-zero-reports",
+      "prompt": "Daily AFT-EndToEnd run: CaaS Reports tests get 0 rows, the uploader pre-check passed. Is fakesnow broken?",
+      "expected_output": "Agent runs fakesnow_health_checks.py and executes the checks in order through the MCP tools, stopping at the first failure, then confirms with query_fakesnow.py counts. It never dumps raw sink logs.",
+      "files": [],
+      "assertions": [
+        {"id": "uses_health_script", "text": "Runs fakesnow_health_checks.py (or the same STATS/PromQL checks) instead of reading raw logs"},
+        {"id": "no_raw_sink_logs", "text": "Does not KEEP full message lines from the sink or cleanup containers"},
+        {"id": "confirms_with_table", "text": "Confirms with query_fakesnow.py counts or a flow/org query"}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "find-one-flow",
+      "prompt": "Is flow FlowIdTest-godggtduxc in fakesnow?",
+      "expected_output": "Agent runs python query_fakesnow.py flow FlowIdTest-godggtduxc and reports the tables and creation dates it found.",
+      "files": [],
+      "assertions": [
+        {"id": "canned_query", "text": "Uses query_fakesnow.py flow <id>, not a hand-written SELECT *"},
+        {"id": "short_answer", "text": "Answers with the matching table(s) and CREATION_DATE, without pasting payload columns"}
+      ]
+    },
+    {
+      "id": 3,
+      "name": "which-storage",
+      "prompt": "Did CaaS-EndToEnd 4100 use real Snowflake or the emulator?",
+      "expected_output": "Agent runs which_snowflake.py on the console log (or reads the 'Snowflake REAL|FAKE' line) and answers real Snowflake, because 4100 was started by CaaS-EndToEnd-nightly and used caas_messages_automation_* topics.",
+      "files": [],
+      "assertions": [
+        {"id": "uses_detector", "text": "Uses which_snowflake.py or the Snowflake REAL|FAKE build-log line"},
+        {"id": "correct_mode", "text": "Answers real Snowflake for the nightly run"}
+      ]
+    }
+  ]
+}
